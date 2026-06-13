@@ -93,7 +93,7 @@ export function Settings({ onClose }: { onClose: () => void }) {
               editions; act/scene numbering and punctuation vary slightly between editions (Folio vs. Quarto
               vs. modern editors), so don't panic if your copy differs by a comma.
             </p>
-            <p className="muted">Learning ladder: read it → fill the gaps → most words hidden → first letters → from memory, on a spaced-repetition schedule. Grade yourself honestly and the schedule does the rest.</p>
+            <p className="muted">Learning ladder: read it → type the missing words → recall it from a first-letter skeleton → recite the whole thing from memory, on a spaced-repetition schedule. Every rung is <em>typed and checked word-by-word</em> against the text — no peeking-and-guessing. Your measured accuracy gates the grade, so “Easy” is only on offer when you got every word.</p>
           </section>
         </div>
       </div>

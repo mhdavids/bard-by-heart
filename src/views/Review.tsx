@@ -1,10 +1,12 @@
 import { useMemo, useState } from 'react'
 import { QUOTE_BY_ID } from '../data/quotes'
 import { useProgress, dueCards, nextNewQuotes, newLearnedToday, gradeCard, startLearning, streak, getState } from '../lib/store'
-import { clozeLines, firstLetterLines, CLOZE_FRACTION } from '../lib/cloze'
+import { clozeLines, CLOZE_FRACTION } from '../lib/cloze'
 import type { Grade, Quote } from '../types'
-import { Attribution, ClozeText, FirstLetters, QuoteText } from '../components/QuoteBits'
+import { Attribution, QuoteText } from '../components/QuoteBits'
+import { ClozeAttempt, RecallProduction } from '../components/Recall'
 import { GradeBar } from '../components/GradeBar'
+import { recallGrades } from '../lib/srs'
 import { VICTORY_LINES } from '../lib/util'
 
 type Item = { quoteId: string; intro: boolean; requeues: number }
@@ -106,9 +108,7 @@ function PracticeCard({ q, intro, onGrade, position }: {
 }) {
   const p = useProgress()
   const [phase, setPhase] = useState<'intro' | 'practice'>(intro ? 'intro' : 'practice')
-  const [revealed, setRevealed] = useState<Set<string>>(new Set())
-  const [showFull, setShowFull] = useState(false)
-  const [showHint, setShowHint] = useState(false)
+  const [check, setCheck] = useState<{ accuracy: number; usedHint: boolean } | null>(null)
 
   const card = p.cards[q.id]
   const level = card ? Math.min(card.level, 4) : 1
@@ -117,7 +117,6 @@ function PracticeCard({ q, intro, onGrade, position }: {
     () => clozeLines(q.text, CLOZE_FRACTION[level] ?? 0.3, `${q.id}:${level}`),
     [q, level],
   )
-  const letters = useMemo(() => firstLetterLines(q.text), [q])
 
   if (phase === 'intro') {
     return (
@@ -133,57 +132,54 @@ function PracticeCard({ q, intro, onGrade, position }: {
           className="btn big primary"
           onClick={() => { startLearning(q.id); setPhase('practice') }}
         >
-          Read it twice? Now practice it
+          Read it twice — then let me try it
         </button>
       </div>
     )
   }
 
   const effectiveCard = card ?? { id: q.id, level: 1, ease: 2.5, ivl: 0, due: Date.now(), reps: 0, lapses: 0 }
+  const gate = check ? recallGrades(check.accuracy, check.usedHint) : null
 
   return (
     <div className="view practice">
       <p className="position">{position} · {LEVEL_PROMPTS[level]}</p>
 
-      {level <= 2 && !showFull && (
-        <ClozeText
+      {level <= 2 ? (
+        <ClozeAttempt
+          key={`cloze-${q.id}-${level}`}
           lines={lines}
           prose={q.prose}
-          revealed={revealed}
-          onReveal={k => setRevealed(s => new Set(s).add(k))}
+          onChecked={(accuracy, usedHint) => setCheck({ accuracy, usedHint })}
+          onRedo={() => setCheck(null)}
+        />
+      ) : (
+        <RecallProduction
+          key={`recall-${q.id}-${level}`}
+          q={q}
+          hint={level === 3 ? 'firstletters' : 'none'}
+          onChecked={(accuracy, usedHint) => setCheck({ accuracy, usedHint })}
+          onRedo={() => setCheck(null)}
         />
       )}
 
-      {level === 3 && !showFull && <FirstLetters lines={letters} prose={q.prose} />}
-
-      {level >= 4 && !showFull && (
-        <div className="recall-cue">
-          <p className="cue-opening">“{q.text.split(/\s+/).slice(0, 3).join(' ')}…”</p>
-          {showHint && <FirstLetters lines={letters} prose={q.prose} />}
-          {!showHint && (
-            <button className="btn subtle" onClick={() => setShowHint(true)}>Show first letters</button>
-          )}
-        </div>
-      )}
-
-      {showFull && <QuoteText q={q} />}
       <Attribution q={q} />
 
-      {!showFull && (
-        <button className="btn" onClick={() => setShowFull(true)}>
-          {level <= 2 ? 'Reveal everything' : 'Reveal the full text'}
-        </button>
+      {gate && (
+        <>
+          <p className="grade-coach">
+            How well did that come back to you? Grades above your recall are locked — earn “Easy” by getting every word.
+          </p>
+          <GradeBar card={effectiveCard} onGrade={onGrade} allowed={gate.allowed} recommended={gate.recommended} />
+        </>
       )}
-
-      <p className="grade-coach">Say it aloud, then grade yourself honestly — Good = a minor stumble, Easy = word-perfect.</p>
-      <GradeBar card={effectiveCard} onGrade={onGrade} />
     </div>
   )
 }
 
 const LEVEL_PROMPTS: Record<number, string> = {
-  1: 'fill the gaps',
-  2: 'most words hidden',
-  3: 'first letters only',
-  4: 'from memory',
+  1: 'type the missing words',
+  2: 'type the missing words',
+  3: 'recall it from the skeleton',
+  4: 'recite it from memory',
 }

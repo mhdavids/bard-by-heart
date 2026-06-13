@@ -320,9 +320,74 @@ section { margin: 0; }
   align-items: baseline;
 }
 .practice section { margin-top: 2px; }
-.recall-cue { display: flex; flex-direction: column; gap: 14px; }
-.cue-opening { font-family: var(--serif); font-size: 1.45rem; margin: 0; color: var(--ink); }
 .grade-coach { font-size: 0.8rem; color: var(--ink-faint); margin: 4px 0 0; text-align: center; }
+
+/* ── Typed cloze blanks ── */
+.attempt-actions { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
+.cloze-slot { display: inline; white-space: nowrap; }
+.cloze-input {
+  font-family: var(--serif);
+  font-size: 1.3rem;
+  line-height: 1.2;
+  color: var(--gold-soft);
+  background: var(--panel-2);
+  border: none;
+  border-bottom: 2px solid var(--gold);
+  border-radius: 4px 4px 0 0;
+  padding: 0 4px;
+  margin: 0 1px;
+  text-align: center;
+  min-width: 3ch;
+}
+.cloze-input:focus { outline: none; background: color-mix(in srgb, var(--gold) 16%, var(--panel-2)); }
+.cloze-mark { border-radius: 4px; padding: 0 2px; }
+.cloze-mark.ok { color: var(--gold-soft); background: color-mix(in srgb, var(--gold) 14%, transparent); }
+.cloze-mark.no { color: #e08a6a; background: color-mix(in srgb, var(--burgundy) 22%, transparent); }
+.cloze-typed {
+  display: inline-block;
+  font-size: 0.75em;
+  color: var(--ink-faint);
+  text-decoration: line-through;
+  margin-left: 4px;
+  vertical-align: middle;
+}
+
+/* ── Full typed recall ── */
+.production { display: flex; flex-direction: column; gap: 10px; }
+.hint-label, .recall-textarea ~ .hint-label {
+  font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-faint); margin: 0;
+}
+.recall-textarea {
+  width: 100%;
+  font-family: var(--serif);
+  font-size: 1.2rem;
+  line-height: 1.5;
+  color: var(--ink);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px;
+  resize: vertical;
+}
+.recall-textarea:focus { outline: none; border-color: var(--gold); }
+.recall-textarea::placeholder { color: var(--ink-faint); font-style: italic; font-size: 0.95rem; }
+
+/* ── Recall diff result ── */
+.result-diff .rw { border-radius: 4px; }
+.rw-hit { color: var(--ink); }
+.rw-miss { color: #e08a6a; border-bottom: 2px dotted #e08a6a; }
+.rw-wrong { color: #e08a6a; }
+.rw-typed {
+  display: inline-block; font-size: 0.7em; color: var(--ink-faint);
+  text-decoration: line-through; margin-left: 3px; vertical-align: middle;
+}
+.rw-plain { color: var(--ink-dim); }
+.recall-score {
+  margin-top: 12px; text-align: center; font-size: 0.95rem; color: var(--ink-dim);
+}
+.recall-score.perfect { color: var(--gold-soft); font-family: var(--serif); font-size: 1.1rem; }
+.recall-score em { color: #e08a6a; font-style: normal; }
+.recall-extras { color: var(--ink-faint); }
 
 .grade-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
 .grade {
@@ -343,6 +408,9 @@ section { margin: 0; }
 .grade-good { border-color: color-mix(in srgb, var(--green) 70%, var(--line)); }
 .grade-good .grade-label { color: #9dbb8a; }
 .grade-easy .grade-label { color: var(--gold-soft); }
+.grade.locked { opacity: 0.32; cursor: not-allowed; }
+.grade.locked .grade-label { color: var(--ink-faint); }
+.grade.recommended { box-shadow: 0 0 0 2px var(--gold); border-color: var(--gold); }
 
 .session-summary {
   background: var(--panel);

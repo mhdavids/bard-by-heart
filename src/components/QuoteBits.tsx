@@ -1,5 +1,4 @@
 import type { Quote } from '../types'
-import type { TokenLine } from '../lib/cloze'
 import { attribution } from '../lib/util'
 
 /** Full quote text with verse-style hanging indents (or prose flow). */
@@ -26,40 +25,6 @@ export function Badges({ q, byHeart, learning }: { q: Quote; byHeart?: boolean; 
       {q.alert && <span className="badge alert" title="Misquote / context alert">⚠</span>}
       {q.starter && <span className="badge starter" title="Recommended essential">★</span>}
     </span>
-  )
-}
-
-/** Cloze rendering: hidden words are tappable chips that reveal on touch. */
-export function ClozeText({
-  lines, prose, revealed, onReveal,
-}: {
-  lines: TokenLine[]
-  prose?: boolean
-  revealed: Set<string>
-  onReveal: (key: string) => void
-}) {
-  return (
-    <div className={`quote-text lg ${prose ? 'prose-flow' : ''}`}>
-      {lines.map((line, li) => (
-        <span className="vline" key={li}>
-          {line.map((tok, ti) => {
-            const key = `${li}-${ti}`
-            if (!tok.hidden || revealed.has(key)) {
-              return (
-                <span key={key} className={tok.hidden ? 'tok peeked' : 'tok'}>
-                  {tok.word}{' '}
-                </span>
-              )
-            }
-            return (
-              <button key={key} className="tok-hidden" onClick={() => onReveal(key)} aria-label="Reveal word">
-                {' '.repeat(Math.max(3, Math.min(10, tok.core.length)))}{' '}
-              </button>
-            )
-          })}
-        </span>
-      ))}
-    </div>
   )
 }
 

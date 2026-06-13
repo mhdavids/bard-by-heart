@@ -11,6 +11,18 @@ export function newCard(id: string, now = Date.now()): CardState {
   return { id, level: 1, ease: 2.5, ivl: 0, due: now, reps: 0, lapses: 0 }
 }
 
+/**
+ * Map a measured recall accuracy (0–1) to which self-grades are honest.
+ * You cannot claim a passage is easy when you only produced half of it —
+ * the accuracy you actually typed caps how high you're allowed to grade.
+ */
+export function recallGrades(accuracy: number, usedHint: boolean): { allowed: Grade[]; recommended: Grade } {
+  if (usedHint || accuracy < 0.6) return { allowed: ['again'], recommended: 'again' }
+  if (accuracy < 0.9) return { allowed: ['again', 'hard'], recommended: 'hard' }
+  if (accuracy < 1) return { allowed: ['again', 'hard', 'good'], recommended: 'good' }
+  return { allowed: ['again', 'hard', 'good', 'easy'], recommended: 'good' }
+}
+
 /** Days between learning levels when graded Good. */
 const LEARNING_STEP_DAYS = [0, 1, 1, 2] // index by level 0..3 (level 0 unused)
 const FIRST_REVIEW_DAYS = 4
