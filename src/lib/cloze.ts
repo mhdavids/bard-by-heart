@@ -1,20 +1,21 @@
-/** Deterministic cloze + first-letter renderings for the memorization ladder. */
+/** Deterministic phrase-cloze + first-letter renderings for the memory ladder. */
 
-export interface Token {
-  /** The visible word (with attached leading/trailing punctuation). */
-  word: string
-  /** Just the core letters, for first-letter mode. */
-  core: string
-  hidden: boolean
+export interface ClozeSeg {
+  kind: 'text' | 'blank'
+  /** For 'text': the visible run of words. */
+  text?: string
+  /** For 'blank': zero-based blank number across the whole passage. */
+  index?: number
+  /** For 'blank': the phrase the user must recall (original words + punctuation). */
+  answer?: string
+  /** For 'blank': how many words are hidden. */
+  words?: number
 }
 
-export type TokenLine = Token[]
-
-const STOPWORDS = new Set([
-  'the', 'and', 'but', 'for', 'nor', 'with', 'that', 'this', 'thy', 'thou', 'thee',
-  'his', 'her', 'our', 'your', 'are', 'was', 'were', 'will', 'shall', 'not', 'all',
-  'when', 'which', 'what', 'than', 'then', 'them', 'they', 'have', 'hath', 'doth',
-])
+export interface ClozeModel {
+  lines: ClozeSeg[][]
+  blanks: { index: number; answer: string }[]
+}
 
 function hashString(s: string): number {
   let h = 2166136261
@@ -35,35 +36,68 @@ function mulberry32(seed: number) {
   }
 }
 
-function coreOf(word: string): string {
-  return word.replace(/[^A-Za-z']/g, '')
+/** Level → { coverage fraction, typical span length in words }. */
+const SPANS: Record<number, { frac: number; len: number }> = {
+  1: { frac: 0.34, len: 2 },
+  2: { frac: 0.6, len: 4 },
+}
+
+/** Decide which words in a line to hide, as contiguous multi-word spans. */
+function maskLine(n: number, len: number, frac: number, rng: () => number): boolean[] {
+  if (n <= 0) return []
+  if (n <= 2) return new Array(n).fill(true)
+  if (n <= len) {
+    const m = new Array(n).fill(false)
+    for (let i = 0; i < n - 1; i++) m[i] = true // hide all but the last, as one span
+    return m
+  }
+  const gap = Math.max(1, Math.round((len * (1 - frac)) / frac))
+  const period = len + gap
+  const offset = Math.floor(rng() * period)
+  const m = new Array(n).fill(false)
+  for (let i = 0; i < n; i++) if ((((i - offset) % period) + period) % period < len) m[i] = true
+  if (!m.some(Boolean)) for (let i = 0; i < len; i++) m[i] = true
+  if (m.every(Boolean)) m[0] = false // always leave a toehold
+  return m
 }
 
 /**
- * Tokenize quote text into lines of words and hide a deterministic fraction
- * of the "content" words (longer, non-stopword). Same quote + level always
- * hides the same words, so a re-attempt is a true re-test.
+ * Build a phrase-level cloze: hide contiguous spans of words (not lone words),
+ * scaling coverage and span length by level. Deterministic for a given
+ * seed, so re-attempting the same level re-tests the same gaps.
  */
-export function clozeLines(text: string, fraction: number, seedKey: string): TokenLine[] {
-  const lines = text.split('\n').map(line =>
-    line.split(/\s+/).filter(Boolean).map(word => ({ word, core: coreOf(word), hidden: false })),
-  )
-  const candidates: Token[] = []
-  for (const line of lines) {
-    for (const tok of line) {
-      const core = tok.core.toLowerCase()
-      if (core.length >= 4 && !STOPWORDS.has(core)) candidates.push(tok)
+export function buildCloze(text: string, level: number, seedKey: string): ClozeModel {
+  const { frac, len } = SPANS[level] ?? SPANS[1]
+  const rng = mulberry32(hashString(seedKey))
+  const lines: ClozeSeg[][] = []
+  const blanks: { index: number; answer: string }[] = []
+  let blankIdx = 0
+
+  for (const rawLine of text.split('\n')) {
+    const words = rawLine.split(/\s+/).filter(Boolean)
+    const mask = maskLine(words.length, len, frac, rng)
+    const segs: ClozeSeg[] = []
+    let i = 0
+    while (i < words.length) {
+      if (mask[i]) {
+        let j = i
+        while (j < words.length && mask[j]) j++
+        const answer = words.slice(i, j).join(' ')
+        segs.push({ kind: 'blank', index: blankIdx, answer, words: j - i })
+        blanks.push({ index: blankIdx, answer })
+        blankIdx++
+        i = j
+      } else {
+        let j = i
+        while (j < words.length && !mask[j]) j++
+        segs.push({ kind: 'text', text: words.slice(i, j).join(' ') })
+        i = j
+      }
     }
+    lines.push(segs)
   }
-  const rand = mulberry32(hashString(seedKey))
-  const shuffled = [...candidates]
-  for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = Math.floor(rand() * (i + 1))
-    ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
-  }
-  const target = Math.max(1, Math.round(candidates.length * fraction))
-  for (let i = 0; i < target && i < shuffled.length; i++) shuffled[i].hidden = true
-  return lines
+
+  return { lines, blanks }
 }
 
 /** "To be, or not to be" → "T b, o n t b" — the actor's first-letter skeleton. */
@@ -82,5 +116,3 @@ export function firstLetterLines(text: string): string[] {
       .join(' '),
   )
 }
-
-export const CLOZE_FRACTION: Record<number, number> = { 1: 0.3, 2: 0.65 }

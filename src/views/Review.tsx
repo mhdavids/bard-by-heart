@@ -1,10 +1,10 @@
 import { useMemo, useState } from 'react'
 import { QUOTE_BY_ID } from '../data/quotes'
 import { useProgress, dueCards, nextNewQuotes, newLearnedToday, gradeCard, startLearning, streak, getState } from '../lib/store'
-import { clozeLines, CLOZE_FRACTION } from '../lib/cloze'
+import { buildCloze } from '../lib/cloze'
 import type { Grade, Quote } from '../types'
 import { Attribution, QuoteText } from '../components/QuoteBits'
-import { ClozeAttempt, RecallProduction } from '../components/Recall'
+import { GapFill, RecallProduction } from '../components/Recall'
 import { GradeBar } from '../components/GradeBar'
 import { recallGrades } from '../lib/srs'
 import { VICTORY_LINES } from '../lib/util'
@@ -113,8 +113,8 @@ function PracticeCard({ q, intro, onGrade, position }: {
   const card = p.cards[q.id]
   const level = card ? Math.min(card.level, 4) : 1
 
-  const lines = useMemo(
-    () => clozeLines(q.text, CLOZE_FRACTION[level] ?? 0.3, `${q.id}:${level}`),
+  const cloze = useMemo(
+    () => buildCloze(q.text, level, `${q.id}:${level}`),
     [q, level],
   )
 
@@ -146,9 +146,9 @@ function PracticeCard({ q, intro, onGrade, position }: {
       <p className="position">{position} · {LEVEL_PROMPTS[level]}</p>
 
       {level <= 2 ? (
-        <ClozeAttempt
+        <GapFill
           key={`cloze-${q.id}-${level}`}
-          lines={lines}
+          model={cloze}
           prose={q.prose}
           onChecked={(accuracy, usedHint) => setCheck({ accuracy, usedHint })}
           onRedo={() => setCheck(null)}
@@ -178,8 +178,8 @@ function PracticeCard({ q, intro, onGrade, position }: {
 }
 
 const LEVEL_PROMPTS: Record<number, string> = {
-  1: 'type the missing words',
-  2: 'type the missing words',
+  1: 'fill the missing phrases',
+  2: 'fill the longer gaps',
   3: 'recall it from the skeleton',
   4: 'recite it from memory',
 }

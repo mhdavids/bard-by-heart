@@ -1,81 +1,50 @@
 import { useMemo, useState } from 'react'
 import type { Quote } from '../types'
-import type { TokenLine } from '../lib/cloze'
-import { firstLetterLines } from '../lib/cloze'
-import { normalizeWord, scoreRecall, missedWords, type RecallResult } from '../lib/diff'
+import { firstLetterLines, type ClozeModel } from '../lib/cloze'
+import { scoreRecall, aggregate, missedWords, type RecallResult } from '../lib/diff'
 import { FirstLetters } from './QuoteBits'
 
-// ── Typed cloze: fill the blanks, then check (levels 1–2) ────────────────
+// ── Phrase cloze: fill the multi-word gaps, scored by closeness (levels 1–2) ──
 
-export function ClozeAttempt({
-  lines, prose, onChecked, onRedo,
+export function GapFill({
+  model, prose, onChecked, onRedo,
 }: {
-  lines: TokenLine[]
+  model: ClozeModel
   prose?: boolean
   onChecked: (accuracy: number, usedHint: boolean) => void
   onRedo: () => void
 }) {
-  const [values, setValues] = useState<Record<string, string>>({})
-  const [revealed, setRevealed] = useState<Set<string>>(new Set())
-  const [checked, setChecked] = useState(false)
+  const [values, setValues] = useState<Record<number, string>>({})
+  const [results, setResults] = useState<Record<number, RecallResult> | null>(null)
 
-  const blanks = useMemo(() => {
-    const keys: { key: string; answer: string }[] = []
-    lines.forEach((line, li) =>
-      line.forEach((tok, ti) => { if (tok.hidden) keys.push({ key: `${li}-${ti}`, answer: tok.word }) }),
-    )
-    return keys
-  }, [lines])
-
-  function isCorrect(key: string, answer: string): boolean {
-    return normalizeWord(values[key] ?? '') === normalizeWord(answer)
+  function grade(typedFor: (index: number, answer: string) => string, usedHint: boolean) {
+    const map: Record<number, RecallResult> = {}
+    for (const b of model.blanks) map[b.index] = scoreRecall(typedFor(b.index, b.answer), b.answer)
+    setResults(map)
+    onChecked(aggregate(Object.values(map)).accuracy, usedHint)
   }
 
-  function check() {
-    setChecked(true)
-    const correct = blanks.filter(b => !revealed.has(b.key) && isCorrect(b.key, b.answer)).length
-    const accuracy = blanks.length === 0 ? 1 : correct / blanks.length
-    onChecked(accuracy, revealed.size > 0)
-  }
+  const check = () => grade(i => values[i] ?? '', false)
+  const giveUp = () => grade(() => '', true)
+  const redo = () => { setResults(null); setValues({}); onRedo() }
 
-  function redo() {
-    setChecked(false)
-    setValues({})
-    setRevealed(new Set())
-    onRedo()
-  }
+  const agg = results ? aggregate(Object.values(results)) : null
 
   return (
     <div>
       <div className={`quote-text lg ${prose ? 'prose-flow' : ''}`}>
-        {lines.map((line, li) => (
+        {model.lines.map((line, li) => (
           <span className="vline" key={li}>
-            {line.map((tok, ti) => {
-              const key = `${li}-${ti}`
-              if (!tok.hidden) return <span className="tok" key={key}>{tok.word}{' '}</span>
-              if (revealed.has(key) && !checked) {
-                return <span className="tok peeked" key={key}>{tok.word}{' '}</span>
-              }
-              if (checked) {
-                const ok = !revealed.has(key) && isCorrect(key, tok.word)
-                return (
-                  <span key={key} className={`cloze-mark ${ok ? 'ok' : 'no'}`}>
-                    {tok.word}
-                    {!ok && values[key] && <span className="cloze-typed">{values[key]}</span>}
-                    {' '}
-                  </span>
-                )
+            {line.map((seg, si) => {
+              if (seg.kind === 'text') return <span className="tok" key={si}>{seg.text}{' '}</span>
+              const idx = seg.index!
+              if (results) {
+                return <span className="gap-result" key={si}><PhraseDiff result={results[idx]} />{' '}</span>
               }
               return (
-                <span className="cloze-slot" key={key}>
-                  <input
-                    className="cloze-input"
-                    style={{ width: `${Math.max(3, normalizeWord(tok.word).length + 1)}ch` }}
-                    value={values[key] ?? ''}
-                    onChange={e => setValues(v => ({ ...v, [key]: e.target.value }))}
-                    autoCapitalize="none" autoCorrect="off" spellCheck={false}
-                    aria-label="Missing word"
-                  />
+                <span className="gap-ph" key={si} aria-label={`blank ${idx + 1}`}>
+                  <span className="gap-num">{idx + 1}</span>
+                  <span className="gap-dashes">{'·'.repeat(Math.min(8, seg.words ?? 1))}</span>
                   {' '}
                 </span>
               )
@@ -84,18 +53,52 @@ export function ClozeAttempt({
         ))}
       </div>
 
-      {!checked ? (
-        <div className="attempt-actions">
-          <button className="btn big primary" onClick={check}>Check my answer</button>
-          <button
-            className="btn subtle"
-            onClick={() => setRevealed(new Set(blanks.map(b => b.key)))}
-          >Stuck? Reveal the blanks</button>
+      {!results ? (
+        <div className="gap-inputs">
+          {model.blanks.map(b => (
+            <label className="gap-row" key={b.index}>
+              <span className="gap-num">{b.index + 1}</span>
+              <input
+                className="gap-input"
+                value={values[b.index] ?? ''}
+                onChange={e => setValues(v => ({ ...v, [b.index]: e.target.value }))}
+                placeholder="the missing words…"
+                autoCapitalize="none" autoCorrect="off" spellCheck={false}
+                aria-label={`Missing words for blank ${b.index + 1}`}
+              />
+            </label>
+          ))}
+          <div className="attempt-actions">
+            <button className="btn big primary" onClick={check}>Check my answer</button>
+            <button className="btn subtle" onClick={giveUp}>Stuck? Show the gaps</button>
+          </div>
         </div>
       ) : (
-        <button className="btn subtle" onClick={redo}>Try the blanks again</button>
+        <>
+          <div className={`recall-score ${agg!.perfect ? 'perfect' : ''}`}>
+            {agg!.perfect
+              ? <span>Every gap filled, word for word. ✓</span>
+              : <span>{agg!.hits} / {agg!.total} hidden words recalled</span>}
+          </div>
+          <button className="btn subtle" onClick={redo}>Try the gaps again</button>
+        </>
       )}
     </div>
+  )
+}
+
+/** Inline word-by-word diff of one filled phrase. */
+function PhraseDiff({ result }: { result: RecallResult }) {
+  return (
+    <>
+      {result.lines.flat().map((w, i) => (
+        <span key={i} className={`rw rw-${w.status}`}>
+          {w.text}
+          {w.status === 'wrong' && w.typed && <span className="rw-typed">{w.typed}</span>}
+          {i < result.lines.flat().length - 1 ? ' ' : ''}
+        </span>
+      ))}
+    </>
   )
 }
 

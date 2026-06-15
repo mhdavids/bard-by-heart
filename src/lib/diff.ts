@@ -123,6 +123,14 @@ export function scoreRecall(userText: string, answerText: string): RecallResult 
   return { lines: resultLines, extras, hits, total, accuracy, perfect: hits === total && extras.length === 0 }
 }
 
+/** Combine several blank-level results into one passage-level score. */
+export function aggregate(results: RecallResult[]): { hits: number; total: number; accuracy: number; perfect: boolean } {
+  const hits = results.reduce((s, r) => s + r.hits, 0)
+  const total = results.reduce((s, r) => s + r.total, 0)
+  const extras = results.reduce((s, r) => s + r.extras.length, 0)
+  return { hits, total, accuracy: total === 0 ? 1 : hits / total, perfect: hits === total && extras === 0 }
+}
+
 /** The missed/wrong canonical words, for a compact "you missed:" summary. */
 export function missedWords(r: RecallResult): string[] {
   const out: string[] = []
