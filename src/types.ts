@@ -1,14 +1,28 @@
 export type Category = 'tragedy' | 'comedy' | 'history' | 'romance' | 'sonnet'
 
+export type Collection = 'shakespeare' | 'poetry' | 'wit' | 'stoic' | 'scripture'
+
+export const COLLECTION_LABEL: Record<Collection, string> = {
+  shakespeare: 'Shakespeare',
+  poetry: 'Poetry',
+  wit: 'Wit & Aphorism',
+  stoic: 'Stoics & Wisdom',
+  scripture: 'King James Bible',
+}
+
 export interface Quote {
   id: string
   /** The quote itself. Verse line breaks preserved with \n. */
   text: string
+  /** The source work: a play, poem title, book of the Bible, etc. */
   play: string
-  /** e.g. "Act 3, Scene 1" or "Sonnet 18" — display citation */
+  /** e.g. "Act 3, Scene 1", "1916", "3:1" — display citation */
   cite: string
+  /** The voice: character, poet, author, or "King James Bible". */
   speaker: string
-  category: Category
+  /** Which corpus this belongs to (defaults to 'shakespeare' if unset). */
+  collection?: Collection
+  category?: Category
   /** What is happening in the scene when this is spoken. */
   context: string
   /** Plain-English meaning, including older senses of words. */

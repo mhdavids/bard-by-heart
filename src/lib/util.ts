@@ -5,8 +5,33 @@ export function firstLine(q: Quote): string {
   return line.length > 64 ? line.slice(0, 61).trimEnd() + '…' : line
 }
 
+/** Full source line, e.g. "Hamlet · Hamlet, Act 3, Scene 1" or "Ecclesiastes 3:1". */
 export function attribution(q: Quote): string {
-  return q.category === 'sonnet' ? q.cite : `${q.speaker} · ${q.play}, ${q.cite}`
+  switch (q.collection) {
+    case 'scripture':
+      return `${q.play} ${q.cite}`
+    case 'poetry':
+    case 'wit':
+      return `${q.speaker} · ${q.play}${q.cite ? ` (${q.cite})` : ''}`
+    case 'stoic':
+      return `${q.speaker} · ${q.play}${q.cite ? `, ${q.cite}` : ''}`
+    default:
+      return q.category === 'sonnet' ? q.cite : `${q.speaker} · ${q.play}, ${q.cite}`
+  }
+}
+
+/** Compact line for list rows, e.g. "Robert Frost · 1916" or "Ecclesiastes 3:1". */
+export function rowLabel(q: Quote): string {
+  switch (q.collection) {
+    case 'scripture':
+      return `${q.play} ${q.cite}`
+    case 'poetry':
+    case 'wit':
+    case 'stoic':
+      return `${q.play}${q.cite ? ` · ${q.cite}` : ''}`
+    default:
+      return q.category === 'sonnet' ? q.cite : `${q.speaker} · ${q.cite}`
+  }
 }
 
 /** Deterministic pick for quote-of-the-day. */
