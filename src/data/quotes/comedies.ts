@@ -136,12 +136,12 @@ export const comedies: Quote[] = [
   },
   {
     id: 'msnd-little-fierce',
-    text: `Though she be but little, she is fierce.`,
+    text: `And though she be but little, she is fierce.`,
     play: "A Midsummer Night's Dream", cite: 'Act 3, Scene 2', speaker: 'Helena', category: 'comedy',
     context: 'Helena warns the men about Hermia mid-catfight — it\'s a fearful insult that four centuries adopted as a compliment.',
     meaning: 'Size and ferocity are uncorrelated; underestimate at your peril.',
     useWhen: 'Celebrating any pocket-sized force of nature: the 5\'2" point guard, the kid who negotiates bedtime like a lawyer.',
-    alert: 'In the scene it\'s not admiring — Helena is genuinely scared of her tiny friend. The internet\'s favorite tattoo is technically trash talk.',
+    alert: 'The actual verse line opens with "And" — the wildly popular standalone form (every mug and tattoo) drops it. And in the scene it isn\'t admiring: Helena is genuinely scared of her tiny friend. Technically trash talk.',
     tags: ['admiration', 'wit', 'courage'], difficulty: 1, starter: true,
   },
   {
