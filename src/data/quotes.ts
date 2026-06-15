@@ -7,6 +7,7 @@ import { romancesAndSonnets } from './quotes/romances-sonnets'
 import { poetry } from './quotes/poetry'
 import { wit } from './quotes/wit'
 import { stoics } from './quotes/stoics'
+import { philosophy } from './quotes/philosophy'
 import { scripture } from './quotes/scripture'
 
 /** Stamp every quote in a source file with its collection. */
@@ -23,6 +24,7 @@ export const QUOTES: Quote[] = [
   ...tag(poetry, 'poetry'),
   ...tag(wit, 'wit'),
   ...tag(stoics, 'stoic'),
+  ...tag(philosophy, 'stoic'),
   ...tag(scripture, 'scripture'),
 ]
 

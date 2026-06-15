@@ -6,7 +6,7 @@ export const COLLECTION_LABEL: Record<Collection, string> = {
   shakespeare: 'Shakespeare',
   poetry: 'Poetry',
   wit: 'Wit & Aphorism',
-  stoic: 'Stoics & Wisdom',
+  stoic: 'Wisdom & Philosophy',
   scripture: 'King James Bible',
 }
 

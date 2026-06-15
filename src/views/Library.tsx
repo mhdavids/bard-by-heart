@@ -23,7 +23,7 @@ const COLLECTION_CHIPS: { key: Collection | 'all'; label: string }[] = [
   { key: 'shakespeare', label: 'Shakespeare' },
   { key: 'poetry', label: 'Poetry' },
   { key: 'wit', label: 'Wit' },
-  { key: 'stoic', label: 'Stoics' },
+  { key: 'stoic', label: 'Philosophy' },
   { key: 'scripture', label: 'Scripture' },
 ]
 

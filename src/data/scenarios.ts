@@ -613,6 +613,71 @@ export const SCENARIOS: Scenario[] = [
     answers: ['scr-soft-answer', 'oth-patience-degrees'],
     why: '"A soft answer turneth away wrath" — Proverbs, the entire science of de-escalation in seven words.',
   },
+
+  // ───────── Philosophy drills ─────────
+  {
+    id: 'sc-becoming-monster',
+    prompt: 'Your crusading friend has slowly turned as ruthless as the thing they set out to fight.',
+    occasion: 'Wisdom & warnings',
+    answers: ['nz-monsters-abyss', 'mac-fair-is-foul'],
+    why: '"He who fights with monsters should be careful lest he thereby become a monster" — Nietzsche\'s warning about the abyss gazing back.',
+  },
+  {
+    id: 'sc-unshakeable-certainty',
+    prompt: "He's not lying — he's worse: he's certain, and he's never once checked.",
+    occasion: 'Wisdom & warnings',
+    answers: ['nz-convictions', 'mov-devil-scripture'],
+    why: '"Convictions are more dangerous enemies of truth than lies" — a lie can be caught; an unexamined conviction can\'t.',
+  },
+  {
+    id: 'sc-certainty-no-evidence',
+    prompt: 'The confidence is at 100%; the supporting evidence is somewhere near zero.',
+    occasion: 'Wisdom & warnings',
+    answers: ['hume-evidence', 'wit-pope-learning'],
+    why: '"A wise man proportions his belief to the evidence" — Hume\'s one-line cure for certainty that outruns the proof.',
+  },
+  {
+    id: 'sc-productive-chaos',
+    prompt: 'A creative friend is despairing at how messy and chaotic their process looks right now.',
+    occasion: 'Courage & action',
+    answers: ['nz-dancing-star', 'ayli-adversity'],
+    why: '"One must still have chaos in you to give birth to a dancing star" — Nietzsche on turbulence as raw material.',
+  },
+  {
+    id: 'sc-purpose-through-pain',
+    prompt: 'They\'re enduring something brutal, but they still have something — someone — to endure it for.',
+    occasion: 'Courage & action',
+    answers: ['nz-why-how', 'scr-isaiah-eagles', 'po-invictus'],
+    why: '"If a man has a why of life, he can put up with almost any how" — purpose outlasting pain (Frankl\'s favorite).',
+  },
+  {
+    id: 'sc-harder-richer-path',
+    prompt: 'They could coast in comfortable mediocrity or take the harder road that actually means something.',
+    occasion: 'Work & ambition',
+    answers: ['mill-socrates', 'troil-things-won'],
+    why: '"Better to be Socrates dissatisfied than a fool satisfied" — Mill on why the examined struggle beats easy contentment.',
+  },
+  {
+    id: 'sc-deflate-pomposity',
+    prompt: 'Someone has let a title go very obviously to their head.',
+    occasion: 'Wit & comebacks',
+    answers: ['mont-throne', 'po-ozymandias'],
+    why: '"Upon the highest throne in the world, we are seated, still, upon our own behind" — Montaigne, deflating grandeur to human scale.',
+  },
+  {
+    id: 'sc-free-speech',
+    prompt: 'You strongly disagree with what they said — and you find yourself defending their right to say it anyway.',
+    occasion: 'Wisdom & warnings',
+    answers: ['volt-defend', 'mill-silence'],
+    why: '"I disapprove of what you say, but I will defend to the death your right to say it" — and you\'ll know it\'s Hall, not Voltaire.',
+  },
+  {
+    id: 'sc-utopian-scheme',
+    prompt: 'The plan assumes people will behave perfectly. They will not.',
+    occasion: 'Wisdom & warnings',
+    answers: ['kant-crooked-timber', 'tn-greatness-thrust'],
+    why: '"Out of such crooked wood as that whereof man is made, nothing perfectly straight can be built" — Kant on designing for flawed humans.',
+  },
 ]
 
 if (import.meta.env.DEV) {
